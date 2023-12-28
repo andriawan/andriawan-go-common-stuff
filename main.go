@@ -4,9 +4,12 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/golang-module/carbon/v2"
@@ -17,6 +20,7 @@ func printBanner() {
 	color.Set(color.FgCyan).Println("Please choose the options below:")
 	color.Set(color.FgCyan).Println("1) Age Calculator")
 	color.Set(color.FgCyan).Println("2) Date Diff Calculator")
+	color.Set(color.FgCyan).Println("3) URL GET Fetcher")
 	fmt.Println()
 }
 
@@ -102,10 +106,36 @@ func renderMainMenu() {
 		doAgeCalculation(scanner)
 	case 2:
 		doDateDiffCalculation(scanner)
+	case 3:
+		doUrlFetch(scanner)
 	default:
 		color.HiRed("incorrect option")
 		renderMainMenu()
 	}
+}
+
+func doUrlFetch(scanner *bufio.Scanner) {
+	color.New(color.FgHiYellow, color.Bold).Println(printHeader("URL GET Fetcher"))
+	color.HiGreen("Please input URL: ")
+	scanner.Scan()
+	url := scanner.Text()
+	start := time.Now()
+	resp, err := http.Get(url)
+	if err != nil {
+		color.HiRed(err.Error())
+		os.Exit(1)
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		color.HiRed(err.Error())
+		os.Exit(1)
+	}
+	elapsed := time.Since(start)
+	color.HiGreen(string(body))
+	color.HiGreen("execution time : " + elapsed.String())
+	fmt.Print("\nPlease enter to continue...")
+	scanner.Scan()
+	renderMainMenu()
 }
 
 func main() {
